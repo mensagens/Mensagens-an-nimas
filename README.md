@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mensagens Públicas</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+    }
+    form, .message {
+      background: #fff;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .admin-delete {
+      background: red;
+      color: white;
+      float: right;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 5px 10px;
+    }
+    .admin-login {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mensagens Públicas</h1>
+
+  <div class="admin-login" id="admin-login">
+    <input type="password" id="admin-password" placeholder="Senha do administrador">
+    <button onclick="loginAdmin()">Entrar como admin</button>
+  </div>
+
+  <form id="msgForm">
+    <input type="text" id="nome" placeholder="Seu nome (ou anônimo)">
+    <textarea id="mensagem" placeholder="Escreva sua mensagem..." required></textarea>
+    <button type="submit">Enviar</button>
+  </form>
+
+  <div id="mensagens"></div>
+
+  <script>
+    let mensagens = JSON.parse(localStorage.getItem("mensagensPublicas")) || [];
+    let admin = false;
+
+    function salvarMensagens() {
+      localStorage.setItem("mensagensPublicas", JSON.stringify(mensagens));
+    }
+
+    function renderizarMensagens() {
+      const container = document.getElementById("mensagens");
+      container.innerHTML = "";
+      mensagens.forEach((msg, index) => {
+        const div = document.createElement("div");
+        div.className = "message";
+        div.innerHTML = `<strong>${msg.nome || "Anônimo"}</strong><br>${msg.texto}`;
+        if (admin) {
+          const btn = document.createElement("button");
+          btn.className = "admin-delete";
+          btn.textContent = "Excluir";
+          btn.onclick = () => {
+            mensagens.splice(index, 1);
+            salvarMensagens();
+            renderizarMensagens();
+          };
+          div.appendChild(btn);
+        }
+        container.appendChild(div);
+      });
+    }
+
+    document.getElementById("msgForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const nome = document.getElementById("nome").value.trim();
+      const texto = document.getElementById("mensagem").value.trim();
+      if (texto) {
+        mensagens.unshift({ nome, texto });
+        salvarMensagens();
+        renderizarMensagens();
+        this.reset();
+      }
+    });
+
+    function loginAdmin() {
+      const senha = document.getElementById("admin-password").value;
+      if (senha === "admin123") {
+        admin = true;
+        document.getElementById("admin-login").style.display = "none";
+        renderizarMensagens();
+      } else {
+        alert("Senha incorreta.");
+      }
+    }
+
+    renderizarMensagens();
+  </script>
+</body>
+</html>
